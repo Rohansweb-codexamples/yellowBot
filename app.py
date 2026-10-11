@@ -4,9 +4,9 @@ import requests
 from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__, static_folder=".")
-API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
-MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini").strip()
-API_URL = "https://api.openai.com/v1/responses"
+API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
+API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 @app.get("/")
 def home():
@@ -14,45 +14,59 @@ def home():
 
 @app.get("/api/status")
 def status():
-    return jsonify(configured=bool(API_KEY), provider="OpenAI", model=MODEL)
+    return jsonify(configured=bool(API_KEY), provider="Google Gemini", model=MODEL)
 
-def ask_openai(instructions, prompt, limit=14000):
+def ask_gemini(instructions, prompt, limit=14000):
     if not API_KEY:
-        return None, (jsonify(error="OpenAI is not configured. Add OPENAI_API_KEY to your server environment settings, then redeploy."), 503)
+        return None, (jsonify(error="Google Gemini is not configured. Add GEMINI_API_KEY to your Render environment variables, then redeploy."), 503)
+    payload = {
+        "systemInstruction": {"parts": [{"text": instructions}]},
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "maxOutputTokens": limit,
+            "temperature": 0.7
+        }
+    }
     try:
-        r = requests.post(API_URL, headers={"Authorization": "Bearer " + API_KEY, "Content-Type": "application/json"}, json={"model": MODEL, "instructions": instructions, "input": prompt, "max_output_tokens": limit, "store": False}, timeout=180)
+        r = requests.post(
+            API_URL.format(model=MODEL),
+            headers={"x-goog-api-key": API_KEY, "Content-Type": "application/json"},
+            json=payload,
+            timeout=180
+        )
     except requests.RequestException:
-        return None, (jsonify(error="Could not reach OpenAI. Check the server connection and try again."), 502)
-    if r.status_code == 401:
-        return None, (jsonify(error="OpenAI rejected the key. Check OPENAI_API_KEY in your hosting settings."), 502)
+        return None, (jsonify(error="Could not reach Google Gemini. Check the server connection and try again."), 502)
+    if r.status_code in (401, 403):
+        return None, (jsonify(error="Google Gemini rejected the key. Check GEMINI_API_KEY in Render and make sure the key is enabled for the Gemini API."), 502)
     if r.status_code == 429:
-        return None, (jsonify(error="OpenAI rate limit or account quota reached. Check your API usage and billing."), 429)
+        return None, (jsonify(error="Google Gemini's free-tier rate limit has been reached. Wait for the quota to reset, or check your Google AI Studio usage limits."), 429)
     if not r.ok:
         try:
-            message = r.json().get("error", {}).get("message", "OpenAI request failed.")
-        except ValueError:
-            message = "OpenAI request failed."
+            message = r.json().get("error", {}).get("message", "Google Gemini request failed.")
+        except (ValueError, AttributeError):
+            message = "Google Gemini request failed."
         return None, (jsonify(error=str(message)[:500]), 502)
     try:
         data = r.json()
-        parts = []
-        for item in data.get("output", []):
-            if item.get("type") == "message":
-                for part in item.get("content", []):
-                    if part.get("type") == "output_text":
-                        parts.append(part.get("text", ""))
-        answer = "\n".join(parts).strip()
-    except (ValueError, TypeError, AttributeError):
-        answer = ""
+        candidates = data.get("candidates", [])
+        parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
+        answer = "\n".join(part.get("text", "") for part in parts if isinstance(part, dict)).strip()
+        finish_reason = candidates[0].get("finishReason", "") if candidates else ""
+    except (ValueError, TypeError, AttributeError, IndexError):
+        answer, finish_reason = "", ""
     if not answer:
-        return None, (jsonify(error="The AI returned an empty result. Try a shorter request."), 502)
+        if finish_reason == "MAX_TOKENS":
+            message = "The AI response reached its output limit. Try a smaller website brief."
+        else:
+            message = "The AI returned an empty result. Try a shorter request."
+        return None, (jsonify(error=message), 502)
     return answer, None
 
 def extract_html(value):
     value = value.strip()
-    value = re.sub(r"^\s*```(?:html)?\s*", "", value, flags=re.IGNORECASE)
-    value = re.sub(r"\s*```\s*$", "", value)
-    found = re.search(r"<!doctype html[\s\S]*", value, flags=re.IGNORECASE)
+    value = re.sub(r"^\\s*```(?:html)?\\s*", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"\\s*```\\s*$", "", value)
+    found = re.search(r"<!doctype html[\\s\\S]*", value, flags=re.IGNORECASE)
     return found.group(0).strip() if found else value
 
 BASE_INSTRUCTIONS = """You are YellowBot Studio, a senior web designer and front-end engineer. Return one complete standalone HTML document only, beginning with <!doctype html>; no markdown fences or explanation. Put all CSS in style tags and JavaScript in script tags. Build a polished, responsive, accessible website with strong typography, careful spacing, mobile-first layout, hover and focus states, complete example content and useful working interactions. Keep it self-contained with no build tools or required packages. Do not create fake non-working buttons. Forms must have front-end validation and clearly state if they are demo-only. Do not claim a backend, accounts, payments or database exists when it does not. Keep the code readable and easy to edit. Do not include secret credentials."""
@@ -74,7 +88,7 @@ Visual style: {style}
 Build size: {size}
 Features: {features or 'Choose suitable useful features.'}
 Make the design custom and professionally art-directed. Include responsive sections and working front-end interactions. Return the entire HTML document only."""
-    answer, error = ask_openai(BASE_INSTRUCTIONS, prompt)
+    answer, error = ask_gemini(BASE_INSTRUCTIONS, prompt)
     if error:
         return error
     answer = extract_html(answer)
@@ -103,7 +117,7 @@ Current complete HTML source:
 {source}
 
 Return the full updated HTML document, not a patch or partial snippet."""
-    answer, error = ask_openai(instructions, prompt, 16000)
+    answer, error = ask_gemini(instructions, prompt, 16000)
     if error:
         return error
     answer = extract_html(answer)
