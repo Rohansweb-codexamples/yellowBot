@@ -1,10 +1,10 @@
 # YellowBot Website Studio — Rohans Web
 
-YellowBot Studio is an AI-powered website builder. Describe a website, generate a complete HTML page with OpenAI, edit the source code, preview your changes, ask the AI to refine the page, save projects in your browser, and download a standalone HTML file.
+YellowBot Studio is an AI-powered website builder using **Google Gemini**, not OpenAI. Describe a website, generate a complete HTML page, edit the source, preview it, ask the AI to refine it, save projects in your browser, and download standalone HTML.
 
 ## Features
 
-- AI website generation from a natural-language brief.
+- AI website generation from a natural-language brief using Google Gemini.
 - Design presets for business sites, portfolios, shop concepts, game hubs, nature pages and blank projects.
 - Full editable HTML/CSS/JavaScript source in the browser.
 - Live preview, refresh, and open-preview controls.
@@ -12,42 +12,59 @@ YellowBot Studio is an AI-powered website builder. Describe a website, generate 
 - Save/reopen multiple projects using browser local storage.
 - Download a standalone HTML file or copy the source.
 - Yellow script, white, dark and nature styles plus light/dark studio appearance.
-- The character image is loaded from `1000007744-removebg-preview.png` in this repository.
+- Character image loaded from `1000007744-removebg-preview.png` in this repository.
+
+## Free AI setup
+
+1. Open [Google AI Studio](https://aistudio.google.com/apikey).
+2. Create an API key for the Gemini API.
+3. The Gemini API has a free tier, but it is **not unlimited**. Limits depend on the model and your account/project. The default model is `gemini-2.5-flash-lite`; check your current quotas in [Google's rate-limit documentation](https://ai.google.dev/gemini-api/docs/rate-limits).
+4. Never put the key in `index.html` or commit it to GitHub. Add it as a secret environment variable on Render.
+
+## Deploy on Render
+
+This repository uses a **Python Flask backend**, so a `package.json` is not needed.
+
+1. Push this repository to GitHub (the updated files are already committed here).
+2. In [Render](https://render.com/), choose **New + → Web Service** and connect `Rohansweb-codexamples/yellowBot`.
+3. Select **Python** as the runtime.
+4. Set **Build Command** to:
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Set **Start Command** to:
+   ```bash
+   python app.py
+   ```
+6. Under **Environment**, add:
+   - Key: `GEMINI_API_KEY`
+   - Value: your Google AI Studio API key
+   - Optional: `GEMINI_MODEL` = `gemini-2.5-flash-lite`
+7. Create the service and wait for deployment. Open the Render URL, then check that the AI status says **Gemini AI connected**.
+
+Render's free web-service plan may sleep when idle and can have its own usage limits. The Gemini free tier also has request/token quotas; neither should be described as unlimited. If you hit a 429 rate-limit response, wait for quota reset and check AI Studio usage.
 
 ## Run locally
 
 Requires Python 3.10+.
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Set your OpenAI API key as an environment variable. Never paste it into `index.html` or commit it to GitHub.
-3. Start the app: `python app.py`
-4. Open `http://localhost:5000`
+```bash
+pip install -r requirements.txt
+```
 
-### Windows PowerShell
-
-Set the key for the current terminal session:
-
+Windows PowerShell:
 ```powershell
-$env:OPENAI_API_KEY="your-api-key-here"
+$env:GEMINI_API_KEY="your-gemini-api-key"
 python app.py
 ```
 
-Optional: set `OPENAI_MODEL` to a model available to your API account. The default is `gpt-4.1-mini`.
-
-## Deploy on Render or another Python host
-
-- Build/install command: `pip install -r requirements.txt`
-- Start command: `python app.py`
-- Add `OPENAI_API_KEY` in the service's environment/secret settings.
-- Optional environment variable: `OPENAI_MODEL`
-
-Do not put your API key in public GitHub files or browser JavaScript. The Flask backend calls the OpenAI Responses API and keeps the key on the server. API usage may incur charges according to your OpenAI account.
-
-GitHub Pages alone cannot run this Python backend. Use a Python web service for AI generation.
+Then open `http://localhost:5000`.
 
 ## Files
 
 - `index.html` — studio UI, editable source, preview, project library and download
-- `app.py` — secure server endpoints for OpenAI website generation and refinement
+- `app.py` — Flask endpoints for Gemini website generation and refinement
 - `requirements.txt` — Flask and requests dependencies
 - `1000007744-removebg-preview.png` — YellowBot character image
+
+GitHub Pages alone cannot run the Python backend; deploy to a Python web service such as Render.
