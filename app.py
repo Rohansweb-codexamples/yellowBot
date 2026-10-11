@@ -64,9 +64,9 @@ def ask_gemini(instructions, prompt, limit=14000):
 
 def extract_html(value):
     value = value.strip()
-    value = re.sub(r"^\\s*```(?:html)?\\s*", "", value, flags=re.IGNORECASE)
-    value = re.sub(r"\\s*```\\s*$", "", value)
-    found = re.search(r"<!doctype html[\\s\\S]*", value, flags=re.IGNORECASE)
+    value = re.sub(r"^\s*```(?:html)?\s*", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"\s*```\s*$", "", value)
+    found = re.search(r"<!doctype html[\s\S]*", value, flags=re.IGNORECASE)
     return found.group(0).strip() if found else value
 
 BASE_INSTRUCTIONS = """You are YellowBot Studio, a senior web designer and front-end engineer. Return one complete standalone HTML document only, beginning with <!doctype html>; no markdown fences or explanation. Put all CSS in style tags and JavaScript in script tags. Build a polished, responsive, accessible website with strong typography, careful spacing, mobile-first layout, hover and focus states, complete example content and useful working interactions. Keep it self-contained with no build tools or required packages. Do not create fake non-working buttons. Forms must have front-end validation and clearly state if they are demo-only. Do not claim a backend, accounts, payments or database exists when it does not. Keep the code readable and easy to edit. Do not include secret credentials."""
