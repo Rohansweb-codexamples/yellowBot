@@ -4,9 +4,9 @@ import requests
 from flask import Flask, jsonify, request, send_from_directory
 
 app = Flask(__name__, static_folder=".")
-API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite").strip()
-API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 @app.get("/")
 def home():
@@ -14,52 +14,47 @@ def home():
 
 @app.get("/api/status")
 def status():
-    return jsonify(configured=bool(API_KEY), provider="Google Gemini", model=MODEL)
+    return jsonify(configured=bool(API_KEY), provider="Groq", model=MODEL)
 
-def ask_gemini(instructions, prompt, limit=14000):
+def ask_groq(instructions, prompt, limit=14000):
     if not API_KEY:
-        return None, (jsonify(error="Google Gemini is not configured. Add GEMINI_API_KEY to your Render environment variables, then redeploy."), 503)
+        return None, (jsonify(error="Groq is not configured. Add GROQ_API_KEY to your Render environment variables, then redeploy."), 503)
     payload = {
-        "systemInstruction": {"parts": [{"text": instructions}]},
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "maxOutputTokens": limit,
-            "temperature": 0.7
-        }
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": instructions},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": limit,
+        "temperature": 0.7
     }
     try:
         r = requests.post(
-            API_URL.format(model=MODEL),
-            headers={"x-goog-api-key": API_KEY, "Content-Type": "application/json"},
+            API_URL,
+            headers={"Authorization": "Bearer " + API_KEY, "Content-Type": "application/json"},
             json=payload,
             timeout=180
         )
     except requests.RequestException:
-        return None, (jsonify(error="Could not reach Google Gemini. Check the server connection and try again."), 502)
+        return None, (jsonify(error="Could not reach Groq. Check the server connection and try again."), 502)
     if r.status_code in (401, 403):
-        return None, (jsonify(error="Google Gemini rejected the key. Check GEMINI_API_KEY in Render and make sure the key is enabled for the Gemini API."), 502)
+        return None, (jsonify(error="Groq rejected the key. Check GROQ_API_KEY in Render and make sure your Groq account has API access."), 502)
     if r.status_code == 429:
-        return None, (jsonify(error="Google Gemini's free-tier rate limit has been reached. Wait for the quota to reset, or check your Google AI Studio usage limits."), 429)
+        return None, (jsonify(error="Groq's free-tier rate limit has been reached. Wait for the quota to reset or check your Groq Console limits."), 429)
     if not r.ok:
         try:
-            message = r.json().get("error", {}).get("message", "Google Gemini request failed.")
+            message = r.json().get("error", {}).get("message", "Groq request failed.")
         except (ValueError, AttributeError):
-            message = "Google Gemini request failed."
+            message = "Groq request failed."
         return None, (jsonify(error=str(message)[:500]), 502)
     try:
         data = r.json()
-        candidates = data.get("candidates", [])
-        parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
-        answer = "\n".join(part.get("text", "") for part in parts if isinstance(part, dict)).strip()
-        finish_reason = candidates[0].get("finishReason", "") if candidates else ""
+        choices = data.get("choices", [])
+        answer = choices[0].get("message", {}).get("content", "").strip() if choices else ""
     except (ValueError, TypeError, AttributeError, IndexError):
-        answer, finish_reason = "", ""
+        answer = ""
     if not answer:
-        if finish_reason == "MAX_TOKENS":
-            message = "The AI response reached its output limit. Try a smaller website brief."
-        else:
-            message = "The AI returned an empty result. Try a shorter request."
-        return None, (jsonify(error=message), 502)
+        return None, (jsonify(error="Groq returned an empty result. Try a shorter request."), 502)
     return answer, None
 
 def extract_html(value):
@@ -88,7 +83,7 @@ Visual style: {style}
 Build size: {size}
 Features: {features or 'Choose suitable useful features.'}
 Make the design custom and professionally art-directed. Include responsive sections and working front-end interactions. Return the entire HTML document only."""
-    answer, error = ask_gemini(BASE_INSTRUCTIONS, prompt)
+    answer, error = ask_groq(BASE_INSTRUCTIONS, prompt)
     if error:
         return error
     answer = extract_html(answer)
@@ -117,7 +112,7 @@ Current complete HTML source:
 {source}
 
 Return the full updated HTML document, not a patch or partial snippet."""
-    answer, error = ask_gemini(instructions, prompt, 16000)
+    answer, error = ask_groq(instructions, prompt, 16000)
     if error:
         return error
     answer = extract_html(answer)
