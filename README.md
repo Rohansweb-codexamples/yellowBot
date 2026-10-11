@@ -27,7 +27,7 @@ YellowBot is an AI-powered website builder using **GroqCloud** and open-weight m
 3. Groq has a free developer tier on supported models, subject to model-specific rate limits and usage policies. **It is not unlimited**; see [Groq's supported models and rate limits](https://console.groq.com/docs/models).
 4. Keep the key private. Add it as `GROQ_API_KEY` in your Base44 environment; never put it in `index.html` or commit it to GitHub.
 
-The default model is `llama-3.3-70b-versatile`. If it is unavailable for your account, choose an active model from the Groq Console and set `GROQ_MODEL` accordingly.
+The default model is `openai/gpt-oss-120b`. If it is unavailable for your account, choose an active model from the Groq Console and set `GROQ_MODEL` accordingly.
 
 ## Run with Base44 (Docker Compose)
 
@@ -52,6 +52,12 @@ python app.py
 ```
 
 Then open `http://localhost:5000`.
+
+## GitHub Pages limitation
+
+GitHub Pages can only serve static files (HTML, CSS, JavaScript, images). This app requires a **Python Flask backend** (`app.py`) to call the Groq API for AI website generation and refinement. The backend cannot run on GitHub Pages.
+
+To use the app, run it with Docker Compose (above) or any Python-capable host. The static HTML pages will display on GitHub Pages, but the AI features will not work without the Flask backend.
 
 ## Files
 

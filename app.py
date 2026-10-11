@@ -15,7 +15,7 @@ PUBLISH_DIR.mkdir(parents=True, exist_ok=True)
 
 app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="/static")
 API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b").strip()
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 publish_lock = threading.Lock()
 published_sites = {}
