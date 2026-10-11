@@ -1,22 +1,28 @@
-# YellowBot — Rohans Web
+# YellowBot Studio — Rohans Web
 
-YellowBot is a responsive assistant interface with a yellow/orange theme, a custom illustrated bot character (separate from the brand mark), browser-saved chat history, theme switching and conversation export.
+YellowBot Studio is a playful, game-like page creator. The YellowBot character image is loaded from `1000007744-removebg-preview.png` in this repository.
+
+## What it does
+
+- A guided creative quest with four short steps: choose a page type, name it, pick a visual mood, and write the page details.
+- Page templates for landing pages, portfolios, events, nature pages, game pages and blank canvases.
+- Four polished themes: yellow script, clean white, sharp dark and fresh nature.
+- Preview and edit the page title, description, button text and theme.
+- Save creations in browser storage, reopen them from the library, and download a standalone HTML page.
+- Light/dark studio appearance and progress/level counters.
+
+YellowBot is written to feel encouraging and friendly, but this page-building mode is a guided rules-based experience rather than a live AI model. Your answers drive the page creation. Saved projects live in the current browser.
 
 ## Run locally
 
-1. Install Python 3.10+.
-2. Run `pip install -r requirements.txt`.
-3. Create a Google AI Studio Gemini API key and set it as the `GEMINI_API_KEY` environment variable. Do not place the key in HTML or commit it to GitHub.
-4. Run `python app.py` and open `http://localhost:5000`.
+1. Open `index.html` directly in a browser, or serve this folder using any static web server.
+2. Keep `1000007744-removebg-preview.png` next to `index.html` so the character image loads.
 
-Optional: set `GEMINI_MODEL` to a model available to your API key. The default is `gemini-2.5-flash`.
-
-## Deploy
-
-Deploy as a Python web service with start command `python app.py`. Add `GEMINI_API_KEY` in the hosting provider's secret/environment settings. GitHub Pages alone serves static files and cannot run `app.py`; use a Python host for live AI replies.
+The optional Flask backend and `requirements.txt` remain in the repository for future server features. The current guided page builder does not require an AI API key.
 
 ## Files
 
-- `index.html` — responsive chat interface
-- `app.py` — Flask API; keeps the Gemini API key server-side
+- `index.html` — YellowBot Studio interface, guided creator, preview, library and HTML export
+- `1000007744-removebg-preview.png` — YellowBot character image used in the interface
+- `app.py` — optional Flask backend
 - `requirements.txt` — Python dependencies
