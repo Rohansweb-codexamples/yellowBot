@@ -49,6 +49,31 @@ This repository uses a **Python Flask backend**, so a `package.json` is not need
 
 Render's free web service may sleep when idle and has its own usage limits. Groq also has API rate limits. If you receive a 429 response, check your Groq Console limits and wait for the quota window to reset.
 
+## Your two YellowBot domains
+
+Use the domains for two different purposes:
+
+- **`https://yellowbot.rohansweb.co.uk`** — the public landing page: what YellowBot is, features, screenshots, and a button that opens the studio.
+- **`https://studio.yellowbot.rohansweb.co.uk`** — the actual AI website builder in this repository.
+
+They should be two separate Render services if you want them to show different websites. Adding both custom domains to one Render service makes both addresses show the same app; DNS alone cannot choose different pages on the same service.
+
+### Connect the Studio domain to this app
+
+1. Open the existing YellowBot web service in [Render Dashboard](https://dashboard.render.com/).
+2. Open **Settings → Custom Domains → Add Custom Domain**.
+3. Add `studio.yellowbot.rohansweb.co.uk`.
+4. In the DNS manager for `rohansweb.co.uk`, create the exact **CNAME** record Render tells you to use. For a subdomain, Render's guide says to point the CNAME to the service's `onrender.com` hostname; use the value shown in your dashboard.
+5. Return to Render and click **Verify**. Wait for the TLS certificate and HTTPS to become active.
+
+Keep `https://yellowbot-aib1.onrender.com/` as a fallback while setting this up. Do not remove existing DNS records unless you know what they do. Render's official guide: [Custom Domains](https://render.com/docs/custom-domains).
+
+### Set up the public landing page
+
+Create a **second** Render service for a separate static landing page (it can be a separate GitHub repository), then add `yellowbot.rohansweb.co.uk` to that service under **Settings → Custom Domains**. Add the DNS record Render specifies and verify it. Put a prominent “Open YellowBot Studio” link on the landing page pointing to `https://studio.yellowbot.rohansweb.co.uk`.
+
+DNS changes must be made at the provider that manages `rohansweb.co.uk`; changing this GitHub repository cannot create DNS records or verify custom domains for you.
+
 ## Run locally
 
 Requires Python 3.10+.
