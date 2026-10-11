@@ -1,0 +1,12 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/api/status",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "GROQ_API_KEY",
+      "description": "Groq Cloud API key for AI website generation. Get it from https://console.groq.com/keys",
+      "requiredAtBoot": false
+    }
+  ]
+}
