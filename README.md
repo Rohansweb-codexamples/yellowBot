@@ -1,6 +1,12 @@
-# YellowBot Website Studio — Rohans Web
+# YellowBot AI Website Builder — Rohans Web
 
-YellowBot Studio is an AI-powered website builder using **GroqCloud** and open-weight models, not OpenAI or Google Gemini. Describe a website, generate a complete HTML page, edit the source, preview it, ask the AI to refine it, save projects in your browser, and download standalone HTML.
+**Live app: https://yellowbot-aib1.onrender.com/**
+
+Open the live AI builder: [yellowbot-aib1.onrender.com](https://yellowbot-aib1.onrender.com/)
+
+Source code: [Rohansweb-codexamples/yellowBot on GitHub](https://github.com/Rohansweb-codexamples/yellowBot)
+
+YellowBot is an AI-powered website builder using **GroqCloud** and open-weight models, not OpenAI or Google Gemini. Describe a website, generate a complete HTML page, edit the source, preview it, ask the AI to refine it, save projects in your browser, and download standalone HTML.
 
 ## Features
 
@@ -23,12 +29,12 @@ YellowBot Studio is an AI-powered website builder using **GroqCloud** and open-w
 
 The default model is `llama-3.3-70b-versatile`. If it is unavailable for your account, choose an active model from the Groq Console and set `GROQ_MODEL` accordingly.
 
-## Deploy on Render
+## Deploy / update on Render
 
 This repository uses a **Python Flask backend**, so a `package.json` is not needed.
 
-1. Open [Render Dashboard](https://dashboard.render.com/) and choose **New + → Web Service**.
-2. Connect the GitHub repository `Rohansweb-codexamples/yellowBot`.
+1. Open [Render Dashboard](https://dashboard.render.com/) and choose **New + → Web Service**, or open the existing YellowBot service.
+2. Make sure the service is connected to [this GitHub repository](https://github.com/Rohansweb-codexamples/yellowBot) and deploys the `main` branch.
 3. Select **Python** as the runtime.
 4. Set **Build Command** to:
    ```bash
@@ -38,10 +44,8 @@ This repository uses a **Python Flask backend**, so a `package.json` is not need
    ```bash
    python app.py
    ```
-6. Under **Environment**, add:
-   - `GROQ_API_KEY` = your secret Groq API key
-   - Optional: `GROQ_MODEL` = `llama-3.3-70b-versatile`
-7. Create the service or manually deploy the latest commit. Open the Render URL and check the status says **Groq AI connected**.
+6. Under **Environment**, add `GROQ_API_KEY` = your secret Groq API key. Optional: `GROQ_MODEL=llama-3.3-70b-versatile`.
+7. In Render, choose **Manual Deploy → Deploy latest commit** if the homepage still shows the old version. Then hard-refresh the live page with **Ctrl+Shift+R**.
 
 Render's free web service may sleep when idle and has its own usage limits. Groq also has API rate limits. If you receive a 429 response, check your Groq Console limits and wait for the quota window to reset.
 
@@ -63,9 +67,9 @@ Then open `http://localhost:5000`.
 
 ## Files
 
-- `index.html` — studio UI, editable source, preview, project library and download
+- `index.html` — AI builder homepage, editor, preview, project library and download
 - `app.py` — Flask endpoints for Groq website generation and refinement
 - `requirements.txt` — Flask and requests dependencies
 - `1000007744-removebg-preview.png` — YellowBot character image
 
-GitHub Pages alone cannot run the Python backend; deploy to a Python web service such as Render.
+**Note:** GitHub Pages alone cannot run the Python AI backend; use Render or another Python web service.
