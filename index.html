@@ -63,7 +63,8 @@
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let projects=[],currentId=null,lastGenerated='',dark=false,busy=false;
-try{projects=JSON.parse(localStorage.getItem('yellowbot-websites-v3')||'[]');if(!Array.isArray(projects))projects=[];}catch(e){projects=[];}\ntry{dark=localStorage.getItem('yellowbot-studio-dark')==='1';}catch(e){dark=false;}
+try{projects=JSON.parse(localStorage.getItem('yellowbot-websites-v3')||'[]');if(!Array.isArray(projects))projects=[];}catch(e){projects=[]}
+try{dark=localStorage.getItem('yellowbot-studio-dark')==='1';}catch(e){dark=false;}
 document.body.classList.toggle('dark',dark);$('#topTheme').textContent=dark?'Light mode':'Dark mode';
 const presets={
 business:{name:'Rohan’s Creative Studio',idea:'Build a premium, modern creative studio website with a strong hero, services, featured projects, about section, testimonials and a contact area. Use a professional yellow accent, white space, sharp typography, responsive layout, subtle animations and working navigation.',style:'yellow',features:'Responsive menu, project cards, contact form validation, smooth scrolling'},
