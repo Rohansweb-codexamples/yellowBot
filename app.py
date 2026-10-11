@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent
 PUBLISH_DIR = Path(os.getenv("PUBLISH_DIR", str(BASE_DIR / "published")))
 PUBLISH_DIR.mkdir(parents=True, exist_ok=True)
 
-app = Flask(__name__, static_folder=str(BASE_DIR))
+app = Flask(__name__, static_folder=str(BASE_DIR), static_url_path="/static")
 API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -21,7 +21,7 @@ publish_lock = threading.Lock()
 published_sites = {}
 
 def load_published():
-    # Published HTML files are kept on disk for as long as the Render filesystem persists.
+    # Published HTML files are kept on disk for as long as the server filesystem persists.
     for file in PUBLISH_DIR.glob("*.html"):
         try:
             published_sites[file.stem] = file.read_text(encoding="utf-8")
@@ -49,14 +49,14 @@ def status():
 
 def ask_groq(instructions, prompt, limit=14000):
     if not API_KEY:
-        return None, (jsonify(error="AI is not configured. Add GROQ_API_KEY in Render → Environment, then redeploy."), 503)
+        return None, (jsonify(error="AI is not configured. Add GROQ_API_KEY to the server environment, then restart."), 503)
     payload = {"model": MODEL, "messages": [{"role": "system", "content": instructions}, {"role": "user", "content": prompt}], "max_tokens": limit, "temperature": 0.7}
     try:
         response = requests.post(API_URL, headers={"Authorization": "Bearer " + API_KEY, "Content-Type": "application/json"}, json=payload, timeout=180)
     except requests.RequestException:
-        return None, (jsonify(error="Could not reach Groq. Check the Render service connection and try again."), 502)
+        return None, (jsonify(error="Could not reach Groq. Check the server connection and try again."), 502)
     if response.status_code in (401, 403):
-        return None, (jsonify(error="Groq rejected the key. Check GROQ_API_KEY in Render."), 502)
+        return None, (jsonify(error="Groq rejected the key. Check GROQ_API_KEY."), 502)
     if response.status_code == 429:
         return None, (jsonify(error="Groq rate limit reached. Wait for the quota to reset and try again."), 429)
     if not response.ok:
@@ -138,7 +138,7 @@ def publish():
             (PUBLISH_DIR / f"{slug}.html").write_text(html, encoding="utf-8")
             published_sites[slug] = html
     except OSError:
-        return jsonify(error="The server could not save the published site. Check Render disk permissions."), 500
+        return jsonify(error="The server could not save the published site. Check disk permissions."), 500
     return jsonify(slug=slug, url=request.url_root.rstrip("/") + "/p/" + slug)
 
 @app.get("/p/<slug>")
